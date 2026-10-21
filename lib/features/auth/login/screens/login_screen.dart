@@ -1,4 +1,7 @@
-
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/services/api_service.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/models/login_input_model.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/services/login_service.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -18,12 +21,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
-
+  late final LoginService loginService;
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
+    loginService = LoginService(ApiService());
     super.initState();
   }
 
@@ -108,8 +111,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 PrimaryButton(
                   text: 'Login',
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
+                      try {
+                        LoginInputModel loginInputModel = LoginInputModel(
+                          email: emailController.text,
+                          password: passwordController.text,
+                        );
+                        await loginService.login(
+                          loginInputModel: loginInputModel,
+                        );
+                      } on DioException catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Login failed: $e')),
+                        );
+                      }
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (context) => MainNavigationScreen(),
