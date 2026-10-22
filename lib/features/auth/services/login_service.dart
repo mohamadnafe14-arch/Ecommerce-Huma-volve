@@ -9,7 +9,9 @@ class LoginService {
   final ApiService _apiService;
   LoginService(this._apiService);
 
-  Future<LoginResponse> login({required LoginInputModel loginInputModel}) async {
+  Future<LoginResponse> login({
+    required LoginInputModel loginInputModel,
+  }) async {
     final response = await _apiService.post(
       endpoint: ApiServiceEndpoints.login,
       data: loginInputModel.toJson(),
