@@ -1,6 +1,7 @@
-import 'package:ecommerce_app_huma_volve/core/services/api_service.dart';
-import 'package:ecommerce_app_huma_volve/features/home/cubit/home_cubit.dart';
-import 'package:ecommerce_app_huma_volve/features/home/services/home_service.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/usecases/get_categories.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/usecases/get_products.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentation/cubit/home_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentation/cubit/home_state.dart';
 import 'package:ecommerce_app_huma_volve/features/home/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,17 +19,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategoryIndex = 0;
-  late HomeService _homeService;
-  @override
-  void initState() {
-    super.initState();
-    _homeService = HomeService(ApiService());
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => HomeCubit(_homeService)..fetchCategories(),
+      create: (context) =>
+          HomeCubit(context.read<GetCategories>(), context.read<GetProducts>())
+            ..fetchCategories(),
       child: Scaffold(
         backgroundColor: AppTheme.background,
         body: SafeArea(
@@ -122,23 +119,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 32),
                       BlocBuilder<HomeCubit, HomeState>(
                         buildWhen: (previous, current) =>
-                            current is CategoriesLoading ||
-                            current is CategoriesLoaded ||
-                            current is CategoriesError ||
-                            current is HomeInitial,
+                            previous.categoriesStatus !=
+                                current.categoriesStatus ||
+                            previous.categories != current.categories,
                         builder: (context, state) {
-                          if (state is CategoriesLoading) {
+                          if (state.categoriesStatus ==
+                              HomeRequestStatus.loading) {
                             return const Center(
                               child: CircularProgressIndicator(),
                             );
-                          } else if (state is CategoriesError) {
+                          } else if (state.categoriesStatus ==
+                              HomeRequestStatus.failure) {
                             return Center(
                               child: Text(
-                                'Error: ${state.message}',
+                                'Error: ${state.categoriesError}',
                                 style: const TextStyle(color: Colors.red),
                               ),
                             );
-                          } else if (state is CategoriesLoaded) {
+                          } else if (state.categoriesStatus ==
+                              HomeRequestStatus.success) {
                             final categories = state.categories;
                             return SizedBox(
                               height: 40,
@@ -148,14 +147,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemBuilder: (context, index) {
                                   final category = categories[index];
                                   return CategoryChip(
-                                    label: category.name ?? '',
+                                    label: category.name,
                                     isSelected: _selectedCategoryIndex == index,
                                     onTap: () {
                                       setState(() {
                                         _selectedCategoryIndex = index;
                                       });
                                       context.read<HomeCubit>().fetchProducts(
-                                        categoryId: category.id ?? 1,
+                                        categoryId: category.id,
                                       );
                                     },
                                   );
@@ -172,24 +171,25 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               BlocBuilder<HomeCubit, HomeState>(
                 buildWhen: (previous, current) =>
-                    current is ProductsLoading ||
-                    current is ProductsLoaded ||
-                    current is ProductsError,
+                    previous.productsStatus != current.productsStatus ||
+                    previous.products != current.products,
                 builder: (context, state) {
-                  if (state is ProductsLoading) {
+                  if (state.productsStatus == HomeRequestStatus.loading) {
                     return const SliverToBoxAdapter(
                       child: Center(child: CircularProgressIndicator()),
                     );
-                  } else if (state is ProductsError) {
+                  } else if (state.productsStatus ==
+                      HomeRequestStatus.failure) {
                     return SliverToBoxAdapter(
                       child: Center(
                         child: Text(
-                          'Error: ${state.message}',
+                          'Error: ${state.productsError}',
                           style: const TextStyle(color: Colors.red),
                         ),
                       ),
                     );
-                  } else if (state is ProductsLoaded) {
+                  } else if (state.productsStatus ==
+                      HomeRequestStatus.success) {
                     final products = state.products;
                     return SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
@@ -197,11 +197,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         return ProductCard(
                           product: Product(
                             id: product.id.toString(),
-                            name: product?.title ?? '',
-                            description: product?.description ?? '',
-                            price: product.price?.toDouble() ?? 0.0,
-                            imageUrl: (product.images?.isNotEmpty ?? false)
-                                ? product.images!.first
+                            name: product.title,
+                            description: product.description,
+                            price: product.price,
+                            imageUrl: product.images.isNotEmpty
+                                ? product.images.first
                                 : '',
                             colors: [],
 
