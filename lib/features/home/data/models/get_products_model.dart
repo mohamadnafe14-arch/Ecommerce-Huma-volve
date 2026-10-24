@@ -9,10 +9,6 @@ class GetProductsModel {
     required this.offset,
   });
   Map<String, dynamic> toJson() {
-    return {
-      'categoryId': categoryId,
-      'limit': limit,
-      'offset': offset,
-    };
+    return {'limit': limit, 'offset': offset};
   }
 }
