@@ -1,3 +1,5 @@
+import 'package:ecommerce_app_huma_volve/features/home/data/models/get_products_model.dart';
+
 import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/home_repository.dart';
@@ -15,9 +17,9 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<List<Product>> getProducts({required int categoryId}) async {
+  Future<List<Product>> getProducts({required GetProductsModel getProductsModel}) async {
     final products = await _remoteDataSource.getProducts(
-      categoryId: categoryId,
+      getProducts: getProductsModel
     );
     return products.map((product) => product).toList();
   }
