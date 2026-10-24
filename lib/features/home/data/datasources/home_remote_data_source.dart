@@ -1,5 +1,6 @@
 import 'package:ecommerce_app_huma_volve/core/consts/api_service_endpoints.dart';
 import 'package:ecommerce_app_huma_volve/core/services/api_service.dart';
+import 'package:ecommerce_app_huma_volve/features/home/data/models/get_products_model.dart';
 
 import '../models/category_model.dart';
 import '../models/product_model.dart';
@@ -31,11 +32,14 @@ class HomeRemoteDataSource {
         .toList(growable: false);
   }
 
-  Future<List<ProductModel>> getProducts({required int categoryId}) async {
+  Future<List<ProductModel>> getProducts({
+    required GetProductsModel getProducts,
+  }) async {
     final response = await _apiService.get(
       endpoint:
-          '${ApiServiceEndpoints.categories}/$categoryId${ApiServiceEndpoints.products}',
+          '${ApiServiceEndpoints.categories}/${getProducts.categoryId}${ApiServiceEndpoints.products}',
       headers: {'Accept': 'application/json'},
+      queryParameters: getProducts.toJson(),
     );
     final data = response.data;
     if (response.statusCode != 200 || data is! List) {
