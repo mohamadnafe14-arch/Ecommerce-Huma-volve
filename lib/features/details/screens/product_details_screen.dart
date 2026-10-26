@@ -1,3 +1,4 @@
+import 'package:ecommerce_app_huma_volve/features/details/widgets/share_button.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/dummy_data.dart';
@@ -16,20 +17,25 @@ class ProductDetailsScreen extends StatefulWidget {
 }
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
-  late Color _selectedColor;
-  late String _selectedSize;
+  Color? _selectedColor;
+  String? _selectedSize;
 
   @override
   void initState() {
     super.initState();
-    _selectedColor = widget.product.colors.first;
-    _selectedSize = widget.product.sizes.first;
+    _selectedColor = widget.product.colors.isNotEmpty
+        ? widget.product.colors.first
+        : null;
+    _selectedSize = widget.product.sizes.isNotEmpty
+        ? widget.product.sizes.first
+        : null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
+      appBar: AppBar(actions: [ShareButton(productId: widget.product.id)]),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -64,10 +70,26 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
                 tag: 'product-${widget.product.id}',
-                child: Image.network(
-                  widget.product.imageUrl,
-                  fit: BoxFit.cover,
-                ),
+                child: widget.product.imageUrl.isNotEmpty
+                    ? Image.network(
+                        widget.product.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Center(
+                              child: Icon(
+                                Icons.image_not_supported_outlined,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                            ),
+                      )
+                    : const Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 40,
+                          color: Colors.grey,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -115,37 +137,44 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           ?.copyWith(height: 1.6, fontSize: 16),
                     ),
                     const SizedBox(height: 24),
-                    Text(
-                      'Select Color',
-                      style: Theme.of(context).textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    ColorSelector(
-                      colors: widget.product.colors,
-                      selectedColor: _selectedColor,
-                      onColorSelected: (color) {
-                        setState(() {
-                          _selectedColor = color;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Select Size',
-                      style: Theme.of(context).textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    SizeSelector(
-                      sizes: widget.product.sizes,
-                      selectedSize: _selectedSize,
-                      onSizeSelected: (size) {
-                        setState(() {
-                          _selectedSize = size;
-                        });
-                      },
-                    ),
+                    if (widget.product.colors.isNotEmpty) ...[
+                      Text(
+                        'Select Color',
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      ColorSelector(
+                        colors: widget.product.colors,
+                        selectedColor:
+                            _selectedColor ?? widget.product.colors.first,
+                        onColorSelected: (color) {
+                          setState(() {
+                            _selectedColor = color;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    if (widget.product.sizes.isNotEmpty) ...[
+                      Text(
+                        'Select Size',
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      SizeSelector(
+                        sizes: widget.product.sizes,
+                        selectedSize:
+                            _selectedSize ?? widget.product.sizes.first,
+                        onSizeSelected: (size) {
+                          setState(() {
+                            _selectedSize = size;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                     const SizedBox(height: 32),
                     PrimaryButton(
                       text: 'Add to Cart',
